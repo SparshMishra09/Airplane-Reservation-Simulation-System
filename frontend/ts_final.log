@@ -1,0 +1,2 @@
+src/app/about/page.tsx(35,7): error TS2353: Object literal may only specify known properties, and 'easing' does not exist in type 'TimelineParams'.
+src/app/about/page.tsx(65,13): error TS2353: Object literal may only specify known properties, and 'easing' does not exist in type 'TimelineParams'.
