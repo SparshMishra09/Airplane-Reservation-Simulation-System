@@ -10,6 +10,7 @@ import { BookingsModule } from './bookings/bookings.module';
 import { AuthModule } from './auth/auth.module';
 import { TasksModule } from './tasks/tasks.module';
 import { AdminModule } from './admin/admin.module';
+import { ContactModule } from './contact/contact.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AdminModule } from './admin/admin.module';
     BookingsModule,
     TasksModule,
     AdminModule,
+    ContactModule,
   ],
   controllers: [AppController],
   providers: [AppService],
