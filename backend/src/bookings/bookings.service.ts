@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CACHE_PROVIDER } from '../cache/cache-provider.interface';
 import type { CacheProvider } from '../cache/cache-provider.interface';
 import { CreateBookingDto } from './dto/booking.dto';
+import { generatePNR } from '../admin/utils/pnr-generator';
 
 /**
  * BookingsService
@@ -157,9 +158,21 @@ export class BookingsService {
         });
       }
 
-      // 4. Create booking
+      // 4. Generate unique PNR (with retry for collision)
+      let pnr: string;
+      let pnrAttempts = 0;
+      do {
+        pnr = generatePNR();
+        const exists = await tx.booking.findUnique({ where: { pnr } });
+        if (!exists) break;
+        pnrAttempts++;
+      } while (pnrAttempts < 10);
+      if (pnrAttempts >= 10) throw new ConflictException('Failed to generate unique PNR');
+
+      // 5. Create booking
       const booking = await tx.booking.create({
         data: {
+          pnr,
           userId: dto.userId,
           flightId: flight.id,
           totalAmount,
