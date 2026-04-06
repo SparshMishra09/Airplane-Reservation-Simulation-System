@@ -312,16 +312,17 @@ function FlightsPageContent() {
   // Date selection states
   const [departureDate, setDepartureDate] = useState(() => getInitialState("departureDate", ""));
   const [returnDate, setReturnDate] = useState(() => getInitialState("returnDate", ""));
+  const [passengers, setPassengers] = useState<number>(() => getInitialState("passengers", 1));
 
   // Sync state actively to local storage
   useEffect(() => {
     if (typeof window !== "undefined") {
       sessionStorage.setItem(
         CACHE_KEY,
-        JSON.stringify({ from, to, flights, searched, mode, filterMaxPrice, filterMaxHours, filterMaxStops, departureDate, returnDate })
+        JSON.stringify({ from, to, flights, searched, mode, filterMaxPrice, filterMaxHours, filterMaxStops, departureDate, returnDate, passengers })
       );
     }
-  }, [from, to, flights, searched, mode, filterMaxPrice, filterMaxHours, filterMaxStops, departureDate, returnDate]);
+  }, [from, to, flights, searched, mode, filterMaxPrice, filterMaxHours, filterMaxStops, departureDate, returnDate, passengers]);
 
   useEffect(() => {
     const f = searchParams.get("from") || "";
@@ -583,6 +584,17 @@ function FlightsPageContent() {
                     />
                   </div>
 
+                  <div className="shrink-0 w-24">
+                    <label className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/70">
+                      <Users className="h-3 w-3" /> Pax
+                    </label>
+                    <div className="flex h-11 items-center justify-between rounded-xl border border-border/60 bg-white px-2 shadow-sm transition-colors duration-200 focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/15">
+                      <button type="button" onClick={() => setPassengers(Math.max(1, passengers - 1))} className="flex h-6 w-6 items-center justify-center rounded-lg text-primary hover:bg-primary/10 hover:text-primary transition-colors">-</button>
+                      <span className="text-sm font-bold">{passengers}</span>
+                      <button type="button" onClick={() => setPassengers(Math.min(5, passengers + 1))} className="flex h-6 w-6 items-center justify-center rounded-lg text-primary hover:bg-primary/10 hover:text-primary transition-colors">+</button>
+                    </div>
+                  </div>
+
                   <div className="shrink-0">
                     <button
                       type="button"
@@ -619,6 +631,7 @@ function FlightsPageContent() {
                   {mode === "live"
                     ? `${displayFlights.length} flight${displayFlights.length !== 1 ? "s" : ""} · ${GLOBAL_AIRPORTS.find((a) => a.code === from)?.city || from} → ${GLOBAL_AIRPORTS.find((a) => a.code === to)?.city || to}`
                     : `${displayFlights.length} demo flight${displayFlights.length !== 1 ? "s" : ""}`}
+                  {passengers > 1 && ` · ${passengers} Passengers`}
                 </p>
               </div>
               <AnimatePresence mode="wait">
@@ -693,13 +706,13 @@ function FlightsPageContent() {
                                   {flight.status}
                                 </span>
                               )}
-                              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">From</p>
-                              <p className="text-2xl font-bold text-primary">₹{price.toLocaleString("en-IN")}</p>
+                              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Total for {passengers}</p>
+                              <p className="text-2xl font-bold text-primary">₹{(price * passengers).toLocaleString("en-IN")}</p>
                               <p className="text-[10px] text-muted-foreground">{formatDate(flight.departure.scheduled)}</p>
                             </div>
                             {mode === "demo" ? (
                               <Link
-                                href={`/flights/${flight.id}`}
+                                href={`/flights/${flight.id}?passengers=${passengers}`}
                                 className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-sm shadow-primary/25 transition-all hover:opacity-90"
                               >
                                 Book
@@ -707,7 +720,7 @@ function FlightsPageContent() {
                               </Link>
                             ) : (
                               <Link
-                                href={`/flights/f1?live=${encodeURIComponent(flight.flightIata)}&airline=${encodeURIComponent(flight.airline)}&dep=${flight.departure.iata}&arr=${flight.arrival.iata}&depTime=${encodeURIComponent(flight.departure.scheduled)}&arrTime=${encodeURIComponent(flight.arrival.scheduled)}`}
+                                href={`/flights/f1?live=${encodeURIComponent(flight.flightIata)}&airline=${encodeURIComponent(flight.airline)}&dep=${flight.departure.iata}&arr=${flight.arrival.iata}&depTime=${encodeURIComponent(flight.departure.scheduled)}&arrTime=${encodeURIComponent(flight.arrival.scheduled)}&passengers=${passengers}`}
                                 className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-sm shadow-primary/25 transition-all hover:opacity-90"
                               >
                                 Book

@@ -398,8 +398,16 @@ export default function FlightDetailPage({
                 {/* Step 1: Passenger */}
                 {step === 1 && (
                   <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="rounded-3xl bg-white/95 border border-border/70 p-8 shadow-lg ring-1 ring-black/[0.03]">
-                    <h2 className="text-2xl font-bold mb-2">Passenger Details</h2>
-                    <p className="text-sm text-muted-foreground mb-6">Fields marked <span className="text-red-500">*</span> are required.</p>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                      <div>
+                        <h2 className="text-2xl font-bold mb-2">Passenger Details</h2>
+                        <p className="text-sm text-muted-foreground">Fields marked <span className="text-red-500">*</span> are required.</p>
+                      </div>
+                      <button 
+                        onClick={handleNext} 
+                        disabled={!passenger.firstName || !passenger.lastName || !passenger.email.toLowerCase().endsWith('@gmail.com')} 
+                        className="rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed">Continue to Seats →</button>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                       <div>
                         <label className="block text-sm font-medium text-muted-foreground mb-1.5">First Name <span className="text-red-500">*</span></label>
@@ -431,20 +439,25 @@ export default function FlightDetailPage({
                         <input type="text" value={passenger.documentId} onChange={e => setPassenger({ ...passenger, documentId: e.target.value })} className="w-full rounded-xl border border-border bg-gray-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:bg-white transition-all" placeholder="A12345678" />
                       </div>
                     </div>
-                    <div className="flex justify-end">
-                      <button 
-                        onClick={handleNext} 
-                        disabled={!passenger.firstName || !passenger.lastName || !passenger.email.toLowerCase().endsWith('@gmail.com')} 
-                        className="rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed">Continue to Seats →</button>
-                    </div>
                   </motion.div>
                 )}
 
                 {/* Step 2: Seats */}
                 {step === 2 && (
                   <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="rounded-3xl bg-white/95 border border-border/70 p-8 shadow-lg ring-1 ring-black/[0.03]">
-                    <h2 className="text-2xl font-bold mb-2">Select Your Seat</h2>
-                    <p className="text-muted-foreground mb-6 text-sm">Real-time availability mapped directly from database.</p>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                      <h2 className="text-2xl font-bold">Select Your Seat</h2>
+                      <div className="flex gap-3">
+                        {!isSeatChange && <button onClick={handlePrev} className="rounded-xl px-6 py-3 text-sm font-semibold text-muted-foreground border hover:bg-secondary transition-colors">← Back</button>}
+                        {isSeatChange ? (
+                          <button onClick={handleCheckout} disabled={seatMappings.length === 0 || bookingLoading} className="rounded-xl bg-green-600 px-8 py-3 text-sm font-semibold text-white shadow-md shadow-green-600/20 hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            {bookingLoading ? "Saving..." : `Confirm ${seatMappings.length} seat change${seatMappings.length !== 1 ? "s" : ""}`}
+                          </button>
+                        ) : (
+                          <button onClick={handleNext} disabled={selectedSeats.length !== passengerCount} className="rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed">Continue to Add-ons →</button>
+                        )}
+                      </div>
+                    </div>
 
                     {isSeatChange ? (
                       <div className="mb-8">
@@ -491,25 +504,7 @@ export default function FlightDetailPage({
                           </div>
                         )}
                       </div>
-                    ) : (
-                      <div className="flex items-center justify-between bg-secondary/30 p-4 rounded-2xl mb-8 border border-border/60">
-                        <div>
-                          <p className="font-semibold text-sm">Number of Passengers</p>
-                          <p className="text-xs text-muted-foreground">Up to 5 passengers per booking</p>
-                        </div>
-                        <div className="flex items-center bg-white border rounded-full p-1 shadow-sm">
-                          <button onClick={() => {
-                            const num = Math.max(1, passengerCount - 1);
-                            setPassengerCount(num);
-                            if (selectedSeatNumbers.size > num) {
-                              setSelectedSeatNumbers(new Set(Array.from(selectedSeatNumbers).slice(-num)));
-                            }
-                          }} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-lg font-medium transition-colors">-</button>
-                          <span className="w-10 text-center font-bold text-sm tracking-wide">{passengerCount}</span>
-                          <button onClick={() => setPassengerCount(Math.min(5, passengerCount + 1))} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-lg font-medium transition-colors">+</button>
-                        </div>
-                      </div>
-                    )}
+                    ) : null}
 
                     {/* Legend */}
                     <div className="flex flex-wrap gap-4 mb-8 text-xs bg-gray-50 p-4 rounded-xl">
@@ -577,23 +572,19 @@ export default function FlightDetailPage({
                       </div>
                     </div>
 
-                    <div className="flex justify-between mt-8 pt-6 border-t">
-                      {!isSeatChange && <button onClick={handlePrev} className="rounded-xl px-6 py-3 text-sm font-semibold text-muted-foreground hover:bg-secondary transition-colors">← Back</button>}
-                      {isSeatChange ? (
-                        <button onClick={handleCheckout} disabled={seatMappings.length === 0 || bookingLoading} className="rounded-xl ml-auto bg-green-600 px-8 py-3 text-sm font-semibold text-white shadow-md shadow-green-600/20 hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                          {bookingLoading ? "Saving..." : `Confirm ${seatMappings.length} seat change${seatMappings.length !== 1 ? "s" : ""}`}
-                        </button>
-                      ) : (
-                        <button onClick={handleNext} disabled={selectedSeats.length !== passengerCount} className="rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed">Continue to Add-ons →</button>
-                      )}
-                    </div>
                   </motion.div>
                 )}
 
                 {/* Step 3: Add-ons */}
                 {step === 3 && (
                   <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="rounded-3xl bg-white/95 border border-border/70 p-8 shadow-lg ring-1 ring-black/[0.03] space-y-8">
-                    <h2 className="text-2xl font-bold">Customize Your Journey</h2>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <h2 className="text-2xl font-bold">Customize Your Journey</h2>
+                      <div className="flex gap-3">
+                        <button onClick={handlePrev} className="rounded-xl px-6 py-3 text-sm font-semibold text-muted-foreground border hover:bg-secondary transition-colors">← Back</button>
+                        <button onClick={handleNext} className="rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 hover:opacity-90 transition-all">Review & Pay →</button>
+                      </div>
+                    </div>
 
                     {/* Baggage */}
                     <div className="flex items-center justify-between p-6 rounded-2xl border border-gray-100 bg-gray-50/50">
@@ -635,18 +626,42 @@ export default function FlightDetailPage({
                       </label>
                     </div>
 
-                    <div className="flex justify-between mt-8 pt-6 border-t">
-                      <button onClick={handlePrev} className="rounded-xl px-6 py-3 text-sm font-semibold text-muted-foreground hover:bg-secondary transition-colors">← Back</button>
-                      <button onClick={handleNext} className="rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 hover:opacity-90 transition-all">Review & Pay →</button>
-                    </div>
                   </motion.div>
                 )}
 
                 {/* Step 4: Payment */}
                 {step === 4 && (
                   <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="rounded-3xl bg-white/95 border border-border/70 p-8 shadow-lg ring-1 ring-black/[0.03]">
-                    <h2 className="text-2xl font-bold mb-2">Payment Details</h2>
-                    <p className="text-sm text-muted-foreground mb-6">All card fields are required to complete your booking.</p>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                      <div>
+                        <h2 className="text-2xl font-bold mb-2">Payment Details</h2>
+                        <p className="text-sm text-muted-foreground">All card fields are required to complete your booking.</p>
+                      </div>
+                      <div className="flex gap-3">
+                        <button onClick={handlePrev} className="rounded-xl px-6 py-3 text-sm font-semibold text-muted-foreground border hover:bg-secondary transition-colors">← Back</button>
+                        <button 
+                          onClick={handleCheckout} 
+                          disabled={
+                            payment.cardNumber.replace(/\s/g, '').length !== 16 ||
+                            !/^(0[1-9]|1[0-2])\/\d{2}$/.test(payment.expiry) ||
+                            !/^\d{3,4}$/.test(payment.cvv) ||
+                            bookingLoading
+                          }
+                          className="rounded-xl bg-gradient-to-r from-primary to-blue-600 px-8 py-3 text-sm font-bold text-white shadow-xl shadow-primary/20 hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                          {bookingLoading ? (
+                            <span className="flex items-center gap-2">
+                              <span className="inline-block h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              Processing JIT...
+                            </span>
+                          ) : (
+                            <>
+                              <span>Pay ₹{finalTotal.toLocaleString('en-IN')}</span>
+                              <span>🔒</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
                     <div className="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-100">
                       <div className="flex flex-wrap gap-3 mb-6">
                         <div className="h-10 px-4 bg-white border border-gray-200 rounded shadow-sm flex items-center justify-center font-bold text-blue-700 italic text-sm">VISA</div>
@@ -711,30 +726,6 @@ export default function FlightDetailPage({
                       </div>
                     )}
 
-                    <div className="flex justify-between mt-8 pt-6 border-t">
-                      <button onClick={handlePrev} className="rounded-xl px-6 py-3 text-sm font-semibold text-muted-foreground hover:bg-secondary transition-colors">← Back</button>
-                      <button 
-                        onClick={handleCheckout} 
-                        disabled={
-                          payment.cardNumber.replace(/\s/g, '').length !== 16 ||
-                          !/^(0[1-9]|1[0-2])\/\d{2}$/.test(payment.expiry) ||
-                          !/^\d{3,4}$/.test(payment.cvv) ||
-                          bookingLoading
-                        }
-                        className="rounded-xl bg-gradient-to-r from-primary to-blue-600 px-8 py-3 text-sm font-bold text-white shadow-xl shadow-primary/20 hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                        {bookingLoading ? (
-                          <span className="flex items-center gap-2">
-                            <span className="inline-block h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            Processing JIT...
-                          </span>
-                        ) : (
-                          <>
-                            <span>Pay ₹{finalTotal.toLocaleString('en-IN')}</span>
-                            <span>🔒</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
                   </motion.div>
                 )}
 
