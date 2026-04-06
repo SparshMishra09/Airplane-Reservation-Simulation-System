@@ -9,6 +9,7 @@ import { FlightsModule } from './flights/flights.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { AuthModule } from './auth/auth.module';
 import { TasksModule } from './tasks/tasks.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { TasksModule } from './tasks/tasks.module';
     FlightsModule,
     BookingsModule,
     TasksModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],
