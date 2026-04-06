@@ -35,11 +35,70 @@ async function main() {
 
   console.log(`  ✅ Aircraft: ${aircraft.length} created`);
 
-  // NOTE: No fake flights or seats are seeded.
-  // Flights come from the AviationStack API (real data).
-  // Seats & bookings are created dynamically when a user books.
+  // 3. Meal Categories & Items (₹ INR pricing)
+  const standardCat = await prisma.mealCategory.upsert({
+    where: { name: 'Standard' },
+    update: {},
+    create: { name: 'Standard' },
+  });
+  const premiumCat = await prisma.mealCategory.upsert({
+    where: { name: 'Premium' },
+    update: {},
+    create: { name: 'Premium' },
+  });
+  const specialCat = await prisma.mealCategory.upsert({
+    where: { name: 'Special' },
+    update: {},
+    create: { name: 'Special' },
+  });
 
-  console.log('🎉 Seeding complete! (Users + Aircraft only — flights come from live API)');
+  const mealItems = [
+    { name: 'Standard Veg Meal', price: 0, categoryId: standardCat.id },
+    { name: 'Standard Non-Veg Meal', price: 0, categoryId: standardCat.id },
+    { name: 'Sandwich & Juice', price: 0, categoryId: standardCat.id },
+    { name: 'Premium Vegetarian', price: 450, categoryId: premiumCat.id },
+    { name: 'Premium Non-Veg', price: 550, categoryId: premiumCat.id },
+    { name: 'Continental Platter', price: 650, categoryId: premiumCat.id },
+    { name: 'Gourmet Indian Thali', price: 750, categoryId: premiumCat.id },
+    { name: 'Halal Meal', price: 500, categoryId: specialCat.id },
+    { name: 'Kosher Meal', price: 600, categoryId: specialCat.id },
+    { name: 'Vegan Meal', price: 400, categoryId: specialCat.id },
+    { name: 'Gluten-Free Meal', price: 450, categoryId: specialCat.id },
+    { name: 'Diabetic Meal', price: 500, categoryId: specialCat.id },
+    { name: 'Jain Meal', price: 400, categoryId: specialCat.id },
+  ];
+
+  for (const item of mealItems) {
+    await prisma.mealItem.upsert({
+      where: { id: `seed-${item.name.replace(/\s+/g, '-').toLowerCase()}` },
+      update: {},
+      create: item,
+    });
+  }
+
+  console.log(`  ✅ Meal Categories: 3 created, Meal Items: ${mealItems.length} created`);
+
+  // 4. Baggage Policies (₹ INR pricing)
+  const baggagePolicies = [
+    { name: 'Domestic Economy', freeWeightKg: 15, maxWeightKg: 32, extraCostPerKg: 300 },
+    { name: 'Domestic Business', freeWeightKg: 25, maxWeightKg: 40, extraCostPerKg: 250 },
+    { name: 'Domestic First Class', freeWeightKg: 35, maxWeightKg: 50, extraCostPerKg: 200 },
+    { name: 'International Economy', freeWeightKg: 23, maxWeightKg: 40, extraCostPerKg: 500 },
+    { name: 'International Business', freeWeightKg: 30, maxWeightKg: 50, extraCostPerKg: 400 },
+    { name: 'International First Class', freeWeightKg: 40, maxWeightKg: 60, extraCostPerKg: 350 },
+  ];
+
+  for (const policy of baggagePolicies) {
+    await prisma.baggagePolicy.upsert({
+      where: { name: policy.name },
+      update: {},
+      create: policy,
+    });
+  }
+
+  console.log(`  ✅ Baggage Policies: ${baggagePolicies.length} created`);
+
+  console.log('🎉 Seeding complete! (Users + Aircraft + Meals + Baggage Policies)');
 }
 
 main()

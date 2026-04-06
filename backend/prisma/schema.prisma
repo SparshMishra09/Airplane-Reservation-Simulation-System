@@ -45,12 +45,15 @@ model Flight {
   basePrice     Float
   status        FlightStatus @default(SCHEDULED)
   airline       String?
+  recurrence    String?      // "NONE" | "DAILY" | "WEEKLY" | "MONTHLY"
+  isTemplate    Boolean      @default(false)
   seats         Seat[]
   bookings      Booking[]
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
   @@index([origin, destination])
+  @@index([isTemplate, recurrence])
 }
 
 enum FlightStatus {
@@ -84,6 +87,7 @@ enum SeatClass {
 
 model Booking {
   id                        String        @id @default(uuid())
+  pnr                       String        @unique @db.VarChar(6)
   userId                    String
   user                      User          @relation(fields: [userId], references: [id])
   flightId                  String
@@ -99,10 +103,61 @@ model Booking {
   seats                     Seat[]
   createdAt                 DateTime      @default(now())
   updatedAt                 DateTime      @updatedAt
+
+  @@index([pnr])
 }
 
 enum BookingStatus {
   PENDING
   CONFIRMED
   CANCELLED
+  REFUNDED
+}
+
+// ── Audit Log (immutable trail) ──────────────────────────
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String   // e.g. "FLIGHT_PRICE_CHANGED", "BOOKING_CANCELLED", "REFUND_ISSUED"
+  entityType  String   // "Flight", "Booking", "MealItem", "BaggagePolicy"
+  entityId    String
+  performedBy String   // Admin user ID
+  adminName   String?  // Admin display name for quick rendering
+  details     String   // JSON string with before/after data
+  createdAt   DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([performedBy])
+  @@index([createdAt])
+}
+
+// ── Meal & Service Catalog ───────────────────────────────
+model MealCategory {
+  id        String     @id @default(uuid())
+  name      String     @unique // "Standard", "Premium", "Special"
+  items     MealItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model MealItem {
+  id         String       @id @default(uuid())
+  name       String       // "Vegetarian", "Vegan", "Halal", etc.
+  price      Float
+  categoryId String
+  category   MealCategory @relation(fields: [categoryId], references: [id])
+  isActive   Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+// ── Baggage Policy Manager ───────────────────────────────
+model BaggagePolicy {
+  id             String   @id @default(uuid())
+  name           String   @unique // "Domestic Economy", "International Business", etc.
+  freeWeightKg   Float    // Free baggage allowance in kg
+  maxWeightKg    Float    // Maximum allowed weight
+  extraCostPerKg Float    // Cost per extra kg beyond free allowance
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
