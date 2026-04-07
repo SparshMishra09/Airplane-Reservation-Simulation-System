@@ -193,7 +193,7 @@ export class BookingsService {
       if (dto.userId) await this.cache.del(`bookings:user:${dto.userId}`);
 
       return booking;
-    });
+    }, { timeout: 20000, maxWait: 20000 });
   }
 
   async findAll(userId?: string) {
@@ -262,7 +262,7 @@ export class BookingsService {
       await this.cache.del(`bookings:user:${booking.userId}`);
 
       return updated;
-    });
+    }, { timeout: 20000, maxWait: 20000 });
   }
 
   async changeSeats(id: string, newSeatNumbers: string[], userId: string) {
@@ -347,7 +347,7 @@ export class BookingsService {
       await this.cache.del(`bookings:user:${booking.userId}`);
 
       return updatedBooking;
-    });
+    }, { timeout: 20000, maxWait: 20000 });
   }
 
   /**
@@ -449,6 +449,6 @@ export class BookingsService {
       await this.cache.del(`bookings:user:${booking.userId}`);
 
       return updatedBooking;
-    });
+    }, { timeout: 20000, maxWait: 20000 });
   }
 }

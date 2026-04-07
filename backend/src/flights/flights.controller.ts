@@ -52,13 +52,43 @@ export class FlightsController {
     @Query('arr') arr: string,
     @Query('date') date?: string,
   ) {
+    const localDbFlights = await this.flightsService.search({
+      origin: dep,
+      destination: arr,
+      departureDate: date,
+    });
+
+    const local = localDbFlights
+      .filter((f) => !f.isTemplate && f.status === 'SCHEDULED')
+      .map((f) => ({
+        id: f.id,
+        flightIata: f.flightNumber,
+        airline: f.airline || 'SkyVoyage Airways',
+        airlineIata: f.airline ? f.airline.substring(0, 2).toUpperCase() : 'SV',
+        price: f.basePrice,
+        stops: 0,
+        departure: {
+          airport: f.origin,
+          iata: f.origin,
+          scheduled: f.departureTime.toISOString(),
+        },
+        arrival: {
+          airport: f.destination,
+          iata: f.destination,
+          scheduled: f.arrivalTime.toISOString(),
+        },
+        status: f.status.toLowerCase(),
+        flightDate: f.departureTime.toISOString().split('T')[0],
+        aircraft: f.aircraftId,
+      }));
+
     const rawFlights = await this.aviationstackService.searchFlights(
       dep.toUpperCase(),
       arr.toUpperCase(),
       date,
     );
 
-    return rawFlights.map((f) => ({
+    const external = rawFlights.map((f) => ({
       flightIata:
         f.flight?.iata ||
         `${f.airline?.iata || '??'}${f.flight?.number || '000'}`,
@@ -82,6 +112,8 @@ export class FlightsController {
       flightDate: f.flight_date || '',
       aircraft: f.aircraft?.iata || null,
     }));
+
+    return [...local, ...external];
   }
 
   @Get('seat-map')

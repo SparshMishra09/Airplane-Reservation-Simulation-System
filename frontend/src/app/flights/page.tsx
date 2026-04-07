@@ -720,7 +720,7 @@ function FlightsPageContent() {
                               </Link>
                             ) : (
                               <Link
-                                href={`/flights/f1?live=${encodeURIComponent(flight.flightIata)}&airline=${encodeURIComponent(flight.airline)}&dep=${flight.departure.iata}&arr=${flight.arrival.iata}&depTime=${encodeURIComponent(flight.departure.scheduled)}&arrTime=${encodeURIComponent(flight.arrival.scheduled)}&passengers=${passengers}`}
+                                href={flight.id ? `/flights/${flight.id}?passengers=${passengers}` : `/flights/f1?live=${encodeURIComponent(flight.flightIata)}&airline=${encodeURIComponent(flight.airline)}&dep=${flight.departure.iata}&arr=${flight.arrival.iata}&depTime=${encodeURIComponent(flight.departure.scheduled)}&arrTime=${encodeURIComponent(flight.arrival.scheduled)}&passengers=${passengers}`}
                                 className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-sm shadow-primary/25 transition-all hover:opacity-90"
                               >
                                 Book
